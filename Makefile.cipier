@@ -9,14 +9,33 @@ COMMENT=	Collection of useful functions
 
 LICENSE=	BSD2CLAUSE
 
+FSL_VERSION=	2.12.1
+CEZ_VERSION=	1.11
+
 USE_GITHUB=	yes
 GH_ACCOUNT=	koue
-GH_PROJECT=	libmydb
+GH_PROJECT=	libmydb:libmydb \
+		libfsl:libfsl \
+		libcez:libcez \
+GH_TAGNAME=	${FSL_VERSION}:libfsl \
+		${CEZ_VERSION}:libcez
+
 
 USES=		mysql:103m
 
-CFLAGS+=	-Wall
+CFLAGS+=	-I${WRKSRC_libfsl}/src/base \
+		-I${WRKSRC_libcez}/src/misc \
+		-I${WRKSRC_libcez}/src/queue
+
+LDFLAGS+=	-L${WRKSRC_libfsl}/src/base \
+		-L${WRKSRC_libcez}/src/misc \
+		-L${WRKSRC_libcez}/src/queue
 
 MAKE_ARGS+=	BINDIR=${PREFIX}/sbin MANDIR=${PREFIX}/man/man
+
+pre-configure:
+	@(cd ${WRKSRC_libfsl}/src/base && ${SETENV} ${MAKE_ENV} ${MAKE})
+	@(cd ${WRKSRC_libcez}/src/misc && ${SETENV} ${MAKE_ENV} ${MAKE})
+	@(cd ${WRKSRC_libcez}/src/queue && ${SETENV} ${MAKE_ENV} ${MAKE})
 
 .include <bsd.port.mk>
