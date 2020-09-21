@@ -1,6 +1,6 @@
 # $FreeBSD$
 
-PORTNAME=	mydb
+PORTNAME=	libmydb
 PORTVERSION=	1.0
 CATEGORIES=	devel
 
