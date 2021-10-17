@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2020 Nikola Kolev <koue@chaosophia.net>
+ * Copyright (c) 2019-2021 Nikola Kolev <koue@chaosophia.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -56,7 +56,11 @@ mydb_init(void)
 void
 mydb_set_option(mydb *db, const char *name, const char *value)
 {
+	if (db == NULL || name == NULL || value == NULL) {
+		return;
+	}
 	if (cqa(&db->config, name, value) == -1) {
+		mydb_close(db);
 		printf("%s: fail\n", __func__);
 		exit(1);
 	}
@@ -69,6 +73,9 @@ mydb_connect(mydb *db)
 	const char *mydb_options_list[] = { "hostname", "username",
 	    "password", "database", NULL };
 
+	if (db == NULL) {
+		return (-1);
+	}
 	if ((name = cqc(&db->config, mydb_options_list)) != NULL) {
 		snprintf(db->error, sizeof(db->error),
 		    "Missing option: %s", name);
@@ -92,6 +99,9 @@ mydb_exec(mydb *db, const char *zSql, ...)
 	const char *zQuery;
 	int ret;
 
+	if (db == NULL || zSql == NULL) {
+		return (-1);
+	}
 	blob_init(&sql, 0 , 0);
 	va_start(ap, zSql);
 	blob_vappendf(&sql, zSql, ap);
@@ -110,17 +120,19 @@ mydb_query(mydb *db, const char *zSql)
 {
 	mydb_res *Stmt;
 
+	if (db == NULL || zSql == NULL) {
+		return (NULL);
+	}
 	if ((Stmt = calloc(1, sizeof(*Stmt))) == NULL) {
+		mydb_close(db);
 		fprintf(stderr, "[ERROR] %s: %s\n", __func__, strerror(errno));
 		exit(1);
 	}
-
 	if (mysql_query(db->conn, zSql) != 0) {
 		snprintf(db->error, sizeof(db->error),
 		    "%s: %s", __func__, mysql_error(db->conn));
 		return (NULL);
 	}
-
 	Stmt->res = mysql_store_result(db->conn);
 	if ((Stmt->res == NULL) && mysql_errno(db->conn)) {
 		return (NULL);
@@ -144,12 +156,14 @@ mydb_prepare(mydb *db, const char *zSql, ...)
 	va_list ap;
 	const char *zQuery;
 
+	if (db == NULL || zSql == NULL) {
+		return (NULL);
+	}
 	blob_init(&sql, 0 , 0);
 	va_start(ap, zSql);
 	blob_vappendf(&sql, zSql, ap);
 	va_end(ap);
 	zQuery = blob_str(&sql);
-
 	Stmt = mydb_query(db, zQuery);
 	blob_reset(&sql);
 	return(Stmt);
@@ -167,12 +181,14 @@ mydb_text(mydb *db, const char *zDefault, const char *zSql, ...)
 	const char *zQuery;
 	char *zResult;
 
+	if (db == NULL || zDefault == NULL || zSql == NULL) {
+		return (NULL);
+	}
 	blob_init(&sql, 0 , 0);
 	va_start(ap, zSql);
 	blob_vappendf(&sql, zSql, ap);
 	va_end(ap);
 	zQuery = blob_str(&sql);
-
 	Stmt = mydb_query(db, zQuery);
 	blob_reset(&sql);
 	if ((Stmt != NULL) && (Stmt->numrows == 1) && (Stmt->numfields == 1)
@@ -194,12 +210,14 @@ mydb_int(mydb *db, int zDefault, const char *zSql, ...)
 	const char *zQuery;
 	int zResult;
 
+	if (db == NULL || zSql == NULL) {
+		return (-1);
+	}
 	blob_init(&sql, 0 , 0);
 	va_start(ap, zSql);
 	blob_vappendf(&sql, zSql, ap);
 	va_end(ap);
 	zQuery = blob_str(&sql);
-
 	Stmt = mydb_query(db, zQuery);
 	blob_reset(&sql);
 	if ((Stmt != NULL) && (Stmt->numrows == 1) && (Stmt->numfields == 1)
@@ -216,9 +234,12 @@ mydb_int(mydb *db, int zDefault, const char *zSql, ...)
 int
 mydb_step(mydb_res *stmt)
 {
-	if ((stmt->res == NULL) || (stmt->current == stmt->numrows))
+	if (stmt == NULL) {
+		return (-1);
+	}
+	if ((stmt->res == NULL) || (stmt->current == stmt->numrows)) {
 		return (0);
-
+	}
 	stmt->current++;
 	stmt->row = mysql_fetch_row(stmt->res);
 	return (1);
@@ -227,46 +248,69 @@ mydb_step(mydb_res *stmt)
 int
 mydb_column_int(mydb_res *stmt, int field)
 {
-	if (field >= stmt->numfields)
+	if (stmt == NULL) {
+		return (-1);
+	}
+	if (field >= stmt->numfields) {
 		return (0);
+	}
 	return ((int)strtol(stmt->row[field], NULL, 10));
 }
 
 long
 mydb_column_long(mydb_res *stmt, int field)
 {
-	if (field >= stmt->numfields)
+	if (stmt == NULL) {
+		return (-1);
+	}
+	if (field >= stmt->numfields) {
 		return (0);
+	}
 	return (strtol(stmt->row[field], NULL, 10));
 }
 
 float
 mydb_column_float(mydb_res *stmt, int field)
 {
-	if (field >= stmt->numfields)
+	if (stmt == NULL) {
+		return (-1);
+	}
+	if (field >= stmt->numfields) {
 		return (0);
+	}
 	return (strtof(stmt->row[field], NULL));
 }
 
 double
 mydb_column_double(mydb_res *stmt, int field)
 {
-	if (field >= stmt->numfields)
+	if (stmt == NULL) {
+		return (-1);
+	}
+	if (field >= stmt->numfields) {
 		return (0);
+	}
 	return (strtod(stmt->row[field], NULL));
 }
 
 const char *
 mydb_column_text(mydb_res *stmt, int field)
 {
-	if (field >= stmt->numfields)
+	if (stmt == NULL) {
 		return (NULL);
+	}
+	if (field >= stmt->numfields) {
+		return (NULL);
+	}
 	return (stmt->row[field]);
 }
 
 void
 mydb_finalize(mydb_res *stmt)
 {
+	if (stmt == NULL) {
+		return;
+	}
 	mysql_free_result(stmt->res);
 	free(stmt);
 }
@@ -274,7 +318,12 @@ mydb_finalize(mydb_res *stmt)
 void
 mydb_close(mydb *db)
 {
-	mysql_close(db->conn);
+	if (db == NULL) {
+		return;
+	}
+	if (db->conn != NULL) {
+		mysql_close(db->conn);
+	}
 	cez_queue_purge(&db->config);
 	free(db);
 }
