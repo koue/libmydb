@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2021 Nikola Kolev <koue@chaosophia.net>
+ * Copyright (c) 2019-2022 Nikola Kolev <koue@chaosophia.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -128,6 +128,7 @@ mydb_query(mydb *db, const char *zSql)
 		fprintf(stderr, "[ERROR] %s: %s\n", __func__, strerror(errno));
 		exit(1);
 	}
+	snprintf(db->querystr, sizeof(db->querystr), "%s", zSql);
 	if (mysql_query(db->conn, zSql) != 0) {
 		snprintf(db->error, sizeof(db->error),
 		    "%s: %s", __func__, mysql_error(db->conn));

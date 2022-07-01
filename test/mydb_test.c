@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2020 Nikola Kolev <koue@chaosophia.net>
+ * Copyright (c) 2019-2022 Nikola Kolev <koue@chaosophia.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,7 +50,9 @@ main(void)
 	mydb_set_option(db, "database", "dbname");
 	assert(mydb_connect(db) != -1);
 	assert(mydb_exec(db, "INSERT INTO table (name) VALUES ('koue')") == 0);
+	assert(strcmp(db->querystr, "INSERT INTO table (name) VALUES ('koue')") == 0);
 	assert((stmt = mydb_query(db, "SELECT id FROM table")) != NULL);
+	assert(strcmp(db->querystr, "SELECT id FROM table") == 0);
 	assert(mydb_step(stmt) == 1);
 	assert(mydb_column_int(stmt, 0) == 1);
 	mydb_finalize(stmt);
@@ -59,6 +61,7 @@ main(void)
 	assert(strcmp(mydb_column_text(stmt, 1), "koue") == 0);
 	mydb_finalize(stmt);
 	assert(result = mydb_text(db, "unknown", "SELECT name FROM table WHERE id = 1"));
+	assert(strcmp(db->querystr, "SELECT name FROM table WHERE id = 1") == 0);
 	assert(strcmp(result, "koue") == 0);
 	free(result);
 	assert(result = mydb_text(db, "unknown", "SELECT id, name FROM table WHERE id = 1"));
@@ -68,6 +71,7 @@ main(void)
 	assert(strcmp(result, "unknown") == 0);
 	free(result);
 	assert(mydb_int(db, 0, "SELECT id FROM table WHERE name = 'koue'") == 1);
+	assert(strcmp(db->querystr, "SELECT id FROM table WHERE name = 'koue'") == 0);
 	assert(mydb_int(db, 0, "SELECT id FROM table WHERE name = 'unknown'") == 0);
 	mydb_close(db);
 

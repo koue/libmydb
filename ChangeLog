@@ -1,3 +1,7 @@
+20220701:
+
+  Add 'db->querystr' with debug purpose.
+
 20200921:
 
   Initial commit. Moved from libcez. Renamed from cez_mydb to mydb.

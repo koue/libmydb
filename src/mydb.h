@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2020 Nikola Kolev <koue@chaosophia.net>
+ * Copyright (c) 2019-2022 Nikola Kolev <koue@chaosophia.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,6 +38,7 @@ struct mydb {
 	MYSQL	*conn;
 	struct	cez_queue config;
 	char	error[1024];
+	char	querystr[2048];
 };
 
 typedef struct mydb mydb;
