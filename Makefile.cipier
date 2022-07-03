@@ -23,7 +23,8 @@ GH_TAGNAME=	${FSL_VERSION}:libfsl \
 
 USES=		mysql:103m
 
-CFLAGS+=	-I${WRKSRC_libfsl}/src/base \
+CFLAGS+=	-fPIC \
+		-I${WRKSRC_libfsl}/src/base \
 		-I${WRKSRC_libcez}/src/misc \
 		-I${WRKSRC_libcez}/src/queue
 
